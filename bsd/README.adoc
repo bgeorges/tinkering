@@ -1,0 +1,10 @@
+= BullShit detector
+
+== Installation
+
+Copy the content under www/bsdtector to a micro sd on that you formated and installed on the Yun
+
+[source]
+----
+scp bsButton.jpg root@${yun_ipaddr}://mnt/sd/arduino/www/bsdetector/
+----
