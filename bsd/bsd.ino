@@ -1,16 +1,16 @@
 /**
- * A small project at the request of my friedn and colleague @ffeldmann
- * This is an arduino sketch that runs on the Arduino Yun.
- * This project shows a webpage where people can press the "BullShit" button which in turns will trigger an alarm and light some pixels
- * 
- * BSDetector is a microservice accessible as a REST endpoint - seriously :)
- * REST endpoints can be (GET) called over http as follow
- * "http://${ARDUINO_IP}/arduino/bs/0"     -> set BS allarm off
- * "http://${ARDUINO_IP}/arduino/bs/1"     -> set BS allarm on
- * "http://${ARDUINO_IP}/arduino/health"   -> returns info on how many times one calls bullshit, plus other thinks
- * 
- * @author Bruno P. Georges
- */
+   A small project at the request of my friedn and colleague @ffeldmann
+   This is an arduino sketch that runs on the Arduino Yun.
+   This project shows a webpage where people can press the "BullShit" button which in turns will trigger an alarm and light some pixels
+
+   BSDetector is a microservice accessible as a REST endpoint - seriously :)
+   REST endpoints can be (GET) called over http as follow
+   "http://${ARDUINO_IP}/arduino/bs/0"     -> set BS allarm off
+   "http://${ARDUINO_IP}/arduino/bs/1"     -> set BS allarm on
+   "http://${ARDUINO_IP}/arduino/health"   -> returns info on how many times one calls bullshit, plus other thinks
+
+   @author Bruno P. Georges
+*/
 
 #include <Bridge.h>
 #include <BridgeServer.h>
@@ -27,6 +27,7 @@ BridgeServer server;
 uint16_t bshits = 0;  // bs counter, cater for enough
 #define BS_PIN 12     // will lite when BS is called
 #define BOOT_PIN 12   // will flash when arduino init to show all will go well.
+#define ADMIN_EMAIL "bruno.georges@gmail.com"
 
 // TONES
 #define SPEAKER_PIN  9 // must be a PWM pin (digital 9, 10 or 11)
@@ -39,11 +40,14 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + 
 
 // The YUN IP Address. Value will be set from DHCP leased IP during setup()
 String yunAddr;
-// the url to access the Yun REST enpoints 
-String bsURL; // 
+// the url to access the Yun REST enpoints
+String bsURL; //
 
 // no serial, using BOOT_PIN to show things are going as planned.
 void setup() {
+  SerialUSB.begin(9600);
+  delay(1000);
+  SerialUSB.println("Serial USB Open");
   pinMode(SPEAKER_PIN, OUTPUT);
   pinMode(BOOT_PIN, OUTPUT);
   pixels.begin();
@@ -53,12 +57,11 @@ void setup() {
   server.begin();
   yunAddr = getIPaddr();
   bsURL = "http://" + yunAddr + "/arduino/";
-  // set the ipaddr value with the one we got from DHCP
   flashLed(BOOT_PIN, 2, 100);
   makeNoise(2, tones[1], 100);
+  sendIP();
   ledOFF();
 }
-
 
 void loop() {
   BridgeClient client = server.accept();
@@ -157,8 +160,7 @@ void ledOFF() {
   }
 }
 
-
-String getIPaddr(){
+String getIPaddr() {
   String ipaddr;
   Process networkCheck;  // initialize a new process
   networkCheck.runShellCommand("ifconfig br-wan | awk '/inet addr/ {gsub(\"addr:\", \"\", $2); print $2}' ");
@@ -168,3 +170,12 @@ String getIPaddr(){
   }
   return ipaddr;
 }
+
+void sendIP() {
+  Process p;
+  String link= "http://"+yunAddr+"\/arduino\/bs";
+  p.runShellCommand("cat /mnt/sd/mail_header.txt > /mnt/sd/mail.txt");
+  p.runShellCommand("echo \""+link+"\" >>  /mnt/sd/mail.txt");
+  p.runShellCommand("cat /mnt/sd/mail.txt | ssmtp bruno.georges@gmail.com bruno@redhat.com ffeldman@redhat.com"); //
+}
+
