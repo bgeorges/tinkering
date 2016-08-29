@@ -55,6 +55,7 @@ void setup() {
   flashLed(BOOT_PIN, 3, 300);
   server.listenOnLocalhost();
   server.begin();
+  delay(5000); // wait for all processes to start
   yunAddr = getIPaddr();
   bsURL = "http://" + yunAddr + "/arduino/";
   flashLed(BOOT_PIN, 2, 100);
@@ -166,7 +167,9 @@ String getIPaddr() {
   networkCheck.runShellCommand("ifconfig br-wan | awk '/inet addr/ {gsub(\"addr:\", \"\", $2); print $2}' ");
   while (networkCheck.available() > 0) {
     char c = networkCheck.read();
-    ipaddr += c;
+    if (c != '\n') { // don't need the terminating "\n"
+      ipaddr += c;
+    }
   }
   return ipaddr;
 }
@@ -176,6 +179,6 @@ void sendIP() {
   String link= "http://"+yunAddr+"\/arduino\/bs";
   p.runShellCommand("cat /mnt/sd/mail_header.txt > /mnt/sd/mail.txt");
   p.runShellCommand("echo \""+link+"\" >>  /mnt/sd/mail.txt");
-  p.runShellCommand("cat /mnt/sd/mail.txt | ssmtp bruno.georges@gmail.com bruno@redhat.com ffeldman@redhat.com"); //
+  p.runShellCommand("cat /mnt/sd/mail.txt | ssmtp bruno.georges@gmail.com "); //
 }
 
