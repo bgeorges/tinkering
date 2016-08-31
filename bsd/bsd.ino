@@ -31,7 +31,7 @@ uint16_t bshits = 0;  // bs counter, cater for enough
 
 // TONES
 #define SPEAKER_PIN  9 // must be a PWM pin (digital 9, 10 or 11)
-uint8_t tones[] = {261, 277, 294, 311, 330, 349, 370, 392, 415, 840}; // freq x * Hz
+uint16_t tones[] = {261, 277, 294, 311, 330, 349, 370, 900, 1480, 2960}; // freq x * Hz
 
 // NEOPIXELS
 #define NEOPIXEL_PIN   6
@@ -55,12 +55,13 @@ void setup() {
   flashLed(BOOT_PIN, 3, 300);
   server.listenOnLocalhost();
   server.begin();
-  delay(5000); // wait for all processes to start
+  delay(2000); // wait for all processes to start
   yunAddr = getIPaddr();
   bsURL = "http://" + yunAddr + "/arduino/";
   flashLed(BOOT_PIN, 2, 100);
-  makeNoise(2, tones[1], 100);
+  makeNoise(2, tones[9], 100);
   sendIP();
+  buildStartPage();
   ledOFF();
 }
 
@@ -76,7 +77,6 @@ void loop() {
 void process(BridgeClient client) {
   // read the command
   String command = client.readStringUntil('/');
-  printHtmlPage(client);
   if (command == "bs") {
     int value = 0;
     value = client.parseInt();
@@ -104,7 +104,7 @@ void flashLed(uint8_t fpin, uint8_t times, uint16_t interval) {
 // reps: how many times we send call tone()
 // freq: value of the frequecy
 // d: pause between tones in millis
-void makeNoise(uint8_t reps, uint8_t freq, uint16_t d) {
+void makeNoise(uint8_t reps, uint16_t freq, uint16_t d) {
   for (uint16_t i = 0; i < reps; i++) {
     tone(SPEAKER_PIN, freq);
     delay(d);
@@ -114,18 +114,6 @@ void makeNoise(uint8_t reps, uint8_t freq, uint16_t d) {
   noTone(SPEAKER_PIN);
 }
 
-// remindes me the old days when we had to write our own c||perl CGI libs :)
-void printHtmlPage(BridgeClient client) {
-  client.println("Status: 200");
-  client.println("Content-type: text/html");
-  client.println();
-  client.println("<html><head/><body><h2><b>");
-  client.println("<a href='" + bsURL + "bs/1'>");
-  client.println("<img src='/sd/bsdetector/bsButton.jpg' alt='BullShit!' width='60' height='60' border='0'/></a><br>");
-  client.println("<a href='" + bsURL + "bs/0'>OFF</a></b> [admin only]<br>");
-  client.println("</body></html>");
-}
-
 void printJSonHealth(BridgeClient client) {
   // print health stats in json format
   client.print("bshits:");
@@ -133,10 +121,9 @@ void printJSonHealth(BridgeClient client) {
 }
 
 void bsAlarm() {
-  makeNoise(30, tones[9], 5);
-  for (uint16_t i = 0; i < 10 ; i++) {
+  makeNoise(400, tones[8], 20);
+  for (uint16_t i = 0; i < 70 ; i++) {
     lightUp(255, 0, 0, 50);
-    makeNoise(10, tones[9], 5);
     ledOFF();
     delay(50);
   }
@@ -173,12 +160,19 @@ String getIPaddr() {
   }
   return ipaddr;
 }
-
+ 
 void sendIP() {
   Process p;
-  String link= "http://"+yunAddr+"\/arduino\/bs";
+  String link = "http://" + yunAddr + "/sd/bsdetector/";
   p.runShellCommand("cat /mnt/sd/mail_header.txt > /mnt/sd/mail.txt");
-  p.runShellCommand("echo \""+link+"\" >>  /mnt/sd/mail.txt");
-  p.runShellCommand("cat /mnt/sd/mail.txt | ssmtp bruno.georges@gmail.com "); //
+  p.runShellCommand("echo \"" + link + "\" >>  /mnt/sd/mail.txt");
+  p.runShellCommand("cat /mnt/sd/mail.txt | ssmtp bruno.georges@gmail.com ffeldman@redhat.com "); //
 }
+
+void buildStartPage() {
+  Process p;
+  p.runShellCommand("cat /mnt/sda1/arduino/www/bsdetector/index.html.tmpl > /mnt/sda1/arduino/www/bsdetector/index.html");
+  p.runShellCommand("sed -i \'s/ip_addr/"+yunAddr+"/g\' /mnt/sda1/arduino/www/bsdetector/index.html");
+}
+
 
