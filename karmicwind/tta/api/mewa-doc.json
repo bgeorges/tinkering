@@ -3,5 +3,17 @@
     "info": {
         "title": "mewa",
         "description": "Contains all Mewa calculation routines"
+    },
+    "paths": {
+        "/bame": {
+            "get": {},
+            "parameters": [
+                {
+                    "name": "mewa_year",
+                    "in": "query",
+                    "type": "integer"
+                }
+            ]
+        }
     }
 }
