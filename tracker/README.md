@@ -1,9 +1,9 @@
-=Tracker
-== Purpose
+#Tracker
+## Purpose
 Build a device that tracks location and possibly other metrics and push them to the cloud. While a number of similar solutions already exist on the market, the focus of this one is to leverage Pycom's SiPy boards. 
 Not only Pycom's SiPy boards are triple network capable (WiFi, SigFox and BLE) but they are also low power MicroPython enabled micro controllers.
 
-== What's in the box
+## What's in the box
 SiPy (or FiPy if there is support for LTE-CAT M1 / NB-IOT)
 GPS
 128x64 OLED display
@@ -13,19 +13,19 @@ expansion board to update the firmware of your pycom baord. https://docs.pycom.i
 
 
 
-Step 1
+## Step 1
 Before you start make sure you use a proper USB cable if you do the following steps over serial/USB.
 Upgrade the firmware of the Pycom Board: https://docs.pycom.io/chapter/gettingstarted/installation/firmwaretool.html
 FiPy: 1.17.3.b1
 Lora Region:Singapore (for local testing and can be forced / changed)
 SigFox Region: New Zealand (Singapore and New Zealand are supported in the same region RC2+4)
 
-Upgrade the firmware of the PyTrack shield
+## Upgrade the firmware of the PyTrack shield
 https://docs.pycom.io/chapter/pytrackpysense/installation/firmware.html
 PyTrack firmware version: 0.0.8
 
 
-Get Board Details
+## Get Board Details
 Use one of the IDE and Pycom's plugin to connect in REPL mode. I use the USB that is already connected to the board, you can also use IP if you chooose Wifi option.
 
 ```json
@@ -45,8 +45,7 @@ pymakr.conf
 }
 ```
 
-
-=== Get your SigFox Id and PAC
+### Get your SigFox Id and PAC
 Use the following sample code to show ID/PAC
 
 ```python
@@ -73,9 +72,9 @@ SigFox PAC: 0EBFB82DC04B46E5
 Now you can activate your SigFox enabled board with your board ID and PAC
 Activation: https://backend.sigfox.com/activate
 
-```python
-=== Test SigFox network
+### Test SigFox network
 While you are in REPL mode in your ide, enter the following code
+```python
 #send some data
 import socket
 #create a Sigfox socket 
