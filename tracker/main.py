@@ -1,4 +1,19 @@
-## Test code for read date/time from gps and update RTC
+## Tracker code
+## Once there is a GPS Fix it logs GSP coordinates and 
+## date-time information on the Pytrack's SD card.
+## It sends GPS coordinate to SigFox network where
+## event callbacks will push this to Openshift Online Pro account
+## for furthere processing. 
+## TODO: 
+## Since the board (Pycom's FiPy) supports also Lora and
+## LTE CAT M1 and NB-IOT, I am planning to add code to support
+## auto switching in case SigFox isn't available
+## Look at adding support for 
+##  - BLE / SmartPhone connectivity
+##  - Adafruit cloud, Mosquitto
+##  - etc..
+
+
 from network import Sigfox
 import socket
 import machine
@@ -61,15 +76,10 @@ s.setblocking(True)
 s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False)  
 gps_data = l76.get_datetime()
 #s.send(gps_data[0])
-s.send("GPS Fixed")
+s.send("1.275763")
 
 while (True):
-
     print("RTC time : {}".format(rtc.now()))
     coord = l76.coordinates()
-    f.write("{} - {}\n".format(coord, rtc.now()))
     print("$GPGLL>> {}".format(coord))
-    coord1 = l76.coordinates1()
-    print("$GPGGA>> {}".format(coord1))
-    coord2 = l76.get_datetime()
-    print("$GPRMC>> {}".format(coord2))
+    f.write("{} - {}\n".format(coord, rtc.now()))
