@@ -1,4 +1,4 @@
-#Tracker
+# Tracker
 ## Purpose
 Build a device that tracks location and possibly other metrics and push them to the cloud. While a number of similar solutions already exist on the market, the focus of this one is to leverage Pycom's SiPy boards. 
 Not only Pycom's SiPy boards are triple network capable (WiFi, SigFox and BLE) but they are also low power MicroPython enabled micro controllers.
@@ -10,8 +10,6 @@ GPS
 3500mAh/3.8v Li-Po Battery
 Li-Po Rider from Seed Studio
 expansion board to update the firmware of your pycom baord. https://docs.pycom.io/chapter/datasheets/boards/expansion.html
-
-
 
 ## Step 1
 Before you start make sure you use a proper USB cable if you do the following steps over serial/USB.
@@ -95,4 +93,11 @@ You can see the result echo-ing:
 
 you can check the results in SigFox backedn web UI.
 Messages are in Hex (convert them in ASCII: https://codebeautify.org/hex-string-converter)
+
+note: For a 12-byte data payload, a Sigfox frame will use 26 bytes in total. The payload allowance in downlink messages is 8 bytes.
+
+### GPS
+Get the Pytrack libraries from https://docs.pycom.io/chapter/pytrackpysense/installation/libraries.html
+I replaced L76GNSS.py Library from Pycom by an updated version from 
+This allow me to get most data I need from parsing the various GPS sentences
 
