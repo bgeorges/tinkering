@@ -3,7 +3,7 @@
 ## date-time information on the Pytrack's SD card.
 ## It sends GPS coordinate to SigFox network where
 ## event callbacks will push this to Openshift Online Pro account
-## for furthere processing. 
+## for further processing. 
 ## TODO: 
 ## Since the board (Pycom's FiPy) supports also Lora and
 ## LTE CAT M1 and NB-IOT, I am planning to add code to support
@@ -13,31 +13,42 @@
 ##  - Adafruit cloud, Mosquitto
 ##  - etc..
 
-
+import socket, pycom, machine, sys, network, os, uos
+import math, time, utime, struct, binascii, gc
 from network import Sigfox
-import socket
-import machine
-import math
-import network
-import os
-import time
-import utime
 from machine import RTC
 from machine import SD
 from machine import Timer
 from L76GNSS import L76GNSS
 from pytrack import Pytrack
-import struct
-# setup as a station
- 
-import gc
- 
+
+pycom.heartbeat(False)
+print("Running Python %s on %s" %(sys.version,  uos.uname() [4]))
+pycom.rgbled(0x7f0000) #yellow
 time.sleep(2)
 gc.enable()
+
+# Logging data onto the SD Card
+# TODO: add some error checking here for when no SD Card is present or full or file permission error, etc..
+sd = SD()
+os.mount(sd, '/sd')
+f = open('/sd/tracker.log', 'w')
 
 # Instantiate SigFox class with the correct Zone. in this case Zone 4 works for both NZ and SG
 # RCZ4: Feq: 920MHz, LPRS Module: eRIC-SIGFOX- RCZ4, countries:South America, Australia, New Zealand, Singapore and some parts of Asia
 sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ4)
+#create a Sigfox socket to send the GPS coordinate
+s = socket.socket(socket.AF_SIGFOX, socket.SOCK_RAW)
+# make the socket blocking 
+s.setblocking(True) 
+# configure it as uplink only 
+s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False)
+
+# when the board starts we send the SigFox ID
+s.send("{}".format(binascii.hexlify(sigfox.id())))
+
+# Sending message to SigFox network was successful
+pycom.rgbled(0x007f00) # green
 
 
 #Start GPS
@@ -46,6 +57,7 @@ l76 = L76GNSS(py, timeout=600)
 #start rtc
 rtc = machine.RTC()
 print('Aquiring GPS signal....')
+
 #try to get gps date to config rtc
 while (True):
     gps_datetime = l76.get_datetime()
@@ -60,23 +72,15 @@ while (True):
         print("Current location: {} {} ; Date: {}/{}/{} ; Time: {}:{}:{}".format(gps_datetime[0],gps_datetime[1], day, month, year, hour, minute, second))
         rtc.init( (year, month, day, hour, minute, second, 0, 0))
         break
- 
+
+# blue means we got GPS signal
+pycom.rgbled(0x00007f) # blue
+
 print('RTC Set from GPS to UTC:', rtc.now())
  
-chrono = Timer.Chrono()
-chrono.start()
-sd = SD()
-os.mount(sd, '/sd')
-f = open('/sd/tracker.log', 'w')
-#create a Sigfox socket to send the GPS coordinate
-s = socket.socket(socket.AF_SIGFOX, socket.SOCK_RAW)
-# make the socket blocking 
-s.setblocking(True) 
-# configure it as uplink only 
-s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False)  
+
 gps_data = l76.get_datetime()
 #s.send(gps_data[0])
-s.send("1.275763")
 
 while (True):
     print("RTC time : {}".format(rtc.now()))
