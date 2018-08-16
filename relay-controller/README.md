@@ -28,3 +28,7 @@ curl http://localhost:3000/relay/3/OFF
 curl http://localhost:3000/relay/4/ON
 ```
 
+### Pin Mapping
+Physical | GPIO | BCM
+29 | GPIO.21 | 5
+
