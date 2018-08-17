@@ -3,6 +3,9 @@ var rpio = require('rpio');
 
 var MAX_RELAY = 8;
 
+// map pysical pins to relays, in the order of the array.
+var gpioPins = [29,33,35,37]
+
 var appRouter = function (app) {
 
     app.get("/", function (req, res) {
@@ -18,15 +21,40 @@ var appRouter = function (app) {
         ]);
     });
 
+    app.get("/relays/:state", (req, res, next) => {
+        var state = req.params.state;
+        if (state == 'ON') {
+		for (i=0; i < gpioPins.length; i++ ) {
+	           console.log( "Switching ON relay:" + i + " on pin: "+ gpioPins[i] );
+	    	   rpio.open(gpioPins[i], rpio.OUTPUT);
+	    	   rpio.write(gpioPins[i], rpio.LOW) // yeah I know, will submit a PR for this at some point.
+		}
+
+	} else if  (state == 'OFF') {
+		for (i=0; i < gpioPins.length; i++ ) {
+	           console.log( "Switching OFF relay:" + i + " on pin: "+ gpioPins[i] + "\n" );
+	    	   rpio.open(gpioPins[i], rpio.OUTPUT);
+	    	   rpio.write(gpioPins[i], rpio.HIGH)
+		}
+	} else {
+		res.status(400).send({ message: 'invalid State supplied' });
+	}
+	res.json("All relays are now: "+state);
+    });
+
     app.get("/relay/:id", (req, res, next) => {
         var id = req.params.id;
-        if (isFinite(id) && id > 0) {
-	    console.log( "Reading Pin:" + id + "\n" );
-	    rpio.open(id, rpio.INPUT);
-	    var pinState =(rpio.read(id) ? 'high' : 'low');
-	    console.log( "Pin:" + id + " is: " + pinState + "\n" );
-            res.json({ id: id, state: pinState })
-        }
+	i = id -1
+        if (isFinite(id) && i<gpioPins.length) {
+	    var pin = gpioPins[i]
+	    rpio.open(pin, rpio.INPUT);
+	    var pinState = rpio.read(pin)
+	    console.log( "Relay:" + id + " is: " + pinState );
+            res.json({ relay: id, state: pinState })
+        }else{
+	    console.log("Error reading relay:"+ id+ " on pin: "+ pin);
+	    res.json("Error reading relay:"+ id+ " on pin: "+ pin);
+	}
     });
 
     app.get("/relay/:id/:state", function (req, res) {
@@ -34,38 +62,24 @@ var appRouter = function (app) {
         var state = req.params.state;
         var readState = state;
         console.log("Relay ID:" + id);
-        console.log("Relay Requested State:" + state);
+        console.log("Request to turn relay "+id+" " + state );
+	i = id -1;
 
-        if (isFinite(id) && (state == 'ON'|| state == "OFF") ) {
-	    rpio.open(id, rpio.OUTPUT, rpio.LOW);
+        if (isFinite(i) && (state == 'ON'|| state == "OFF") && i<gpioPins.length ) {
+	    var pin = gpioPins[i];
+	    rpio.open(pin, rpio.OUTPUT, rpio.HIGH);
 	    if ( state == 'ON'){
-        	console.log("Turning ON Relay ID:" + id );
-	    	rpio.write(id, rpio.HIGH)
+        	console.log("Turning ON Relay: " + id );
+	    	rpio.write(pin, rpio.LOW)
 	    }else{
- 	    	console.log("Turning OFF Relay ID:" + id );
+ 	    	console.log("Turning OFF Relay: " + id );
 	    }
-            res.json({ id: id, state: readState })
+            res.json({ relay: id, state: readState })
         } else {
-            res.status(400).send({ message: 'invalid Relay ID and State supplied' });
+            console.log("Invalid Relay number and/or State supplied");
+            res.status(400).send({ message: 'invalid Relay number and/or State supplied' });
         }
     });
-
-}
-
-// TODO
-// write a function thats get the GPIO from the pin id supplied. 
-// this information should be supplied in a config.json file
-var getRelayStatus = function (id, state) {
-    // get the GPIO for this id
-
-    // get the state from the corresponding GPIO
-}
-
-// TODO
-var setRelayStatus = function (id, state) {
-    // get the GPIO for this id
-
-    // set the new GPIO to value from state
 
 }
 
