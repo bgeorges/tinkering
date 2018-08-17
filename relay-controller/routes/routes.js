@@ -1,3 +1,6 @@
+var fs = require("fs");
+var rpio = require('rpio');
+
 var MAX_RELAY = 8;
 
 var appRouter = function (app) {
@@ -17,25 +20,33 @@ var appRouter = function (app) {
 
     app.get("/relay/:id", (req, res, next) => {
         var id = req.params.id;
-        if (isFinite(id) && id > 0 && id < MAX_RELAY) {
-            res.json({ id: id, state: 'ON' })
+        if (isFinite(id) && id > 0) {
+	    console.log( "Reading Pin:" + id + "\n" );
+	    rpio.open(id, rpio.INPUT);
+	    var pinState =(rpio.read(id) ? 'high' : 'low');
+	    console.log( "Pin:" + id + " is: " + pinState + "\n" );
+            res.json({ id: id, state: pinState })
         }
-  
     });
 
     app.get("/relay/:id/:state", function (req, res) {
         var id = req.params.id;
         var state = req.params.state;
         var readState = state;
-        //{state > 0) ? "ON" : "OFF";
+        console.log("Relay ID:" + id);
+        console.log("Relay Requested State:" + state);
 
-        if (isFinite(id) && id > 0 && id < MAX_RELAY) {
-            console.log("Relay ID:" + id);
-            console.log("Relay Requested State:" + state);
-            console.log("Relay New Read State:" + readState);
+        if (isFinite(id) && (state == 'ON'|| state == "OFF") ) {
+	    rpio.open(id, rpio.OUTPUT, rpio.LOW);
+	    if ( state == 'ON'){
+        	console.log("Turning ON Relay ID:" + id );
+	    	rpio.write(id, rpio.HIGH)
+	    }else{
+ 	    	console.log("Turning OFF Relay ID:" + id );
+	    }
             res.json({ id: id, state: readState })
         } else {
-            res.status(400).send({ message: 'invalid Relay ID supplied' });
+            res.status(400).send({ message: 'invalid Relay ID and State supplied' });
         }
     });
 
