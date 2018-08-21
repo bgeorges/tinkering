@@ -1,7 +1,11 @@
 var fs = require("fs");
 var rpio = require('rpio');
+var config = require('config');
+
 
 var MAX_RELAY = 8;
+
+
 
 // map pysical pins to relays, in the order of the array.
 var gpioPins = [29,33,35,37]
@@ -10,6 +14,10 @@ var appRouter = function (app) {
 
     app.get("/", function (req, res) {
         res.status(200).send("Relay Controller landing page goes here");
+    });
+
+    app.get("/config", function(req,res){
+        res.json(config.get('RelayController'));
     });
 
     app.get("/relays", (req, res, next) => {

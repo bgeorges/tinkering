@@ -1,0 +1,18 @@
+{
+    "RelayController": {
+        "serverConfig": {
+            "host": "localhost",
+            "port": 8080,
+            "startOnBoot": true
+        },
+        "devBoard": {
+            "type": "Raspberry Pi 2",
+            "model": "B v1.2",
+            "SoC": "BCM2837"
+        },
+        "relays": {
+            "pins": "29,33,35,37",
+            "bootState": "0,1,0,1"
+        }
+    }
+}
