@@ -1,10 +1,54 @@
 = BullShit detector
 
-== Installation
+A web page with a big "BullShit" button. Pressing it sounds a buzzer and flashes an 8x8 NeoPixel matrix on an Arduino Yun.
 
-Copy the content under www/bsdtector to a micro sd on that you formated and installed on the Yun
+== Hardware
 
-[source]
+* Arduino Yun with a micro SD card
+* 8x8 NeoPixel (WS2812) matrix on pin 6, with its own 5 V supply (up to ~3.8 A at full white)
+* Piezo speaker on pin 9
+* Status LED on pin 12
+
+== Build
+
+. Install the *Adafruit NeoPixel* library (1.2 or later) in the Arduino IDE.
+. Copy `config.example.h` to `config.h` and set `NOTIFY_EMAILS` (or leave it empty). `config.h` is git-ignored so addresses stay out of the repo.
+. Upload `bsd.ino` to the Yun.
+
+== Install the web page
+
+Copy the content of `www/bsdetector/` to the SD card:
+
+[source,bash]
 ----
-scp bsButton.jpg root@${yun_ipaddr}://mnt/sd/arduino/www/bsdetector/
+scp www/bsdetector/* root@${yun_ipaddr}:/mnt/sd/arduino/www/bsdetector/
 ----
+
+The page is then at `http://${yun_ipaddr}/sd/bsdetector/`.
+
+In the Yun's web panel, set *REST API access* to *Open*, or the button will be refused.
+
+== Boot email (optional)
+
+At boot the sketch emails the page's URL to `NOTIFY_EMAILS` with `ssmtp`. This needs:
+
+* `ssmtp` installed and configured on the Yun
+* `/mnt/sd/mail_header.txt` holding the mail headers, for example:
++
+----
+To: you@example.com
+Subject: BullShit detector is up
+
+----
+
+== REST API
+
+All endpoints answer with `{"bshits": <count>}`.
+
+|===
+| Call | Effect
+
+| `GET /arduino/bs/1` | Sound the alarm and count one more BullShit
+| `GET /arduino/bs/0` | Turn the status LED off
+| `GET /arduino/health` | Just return the count
+|===

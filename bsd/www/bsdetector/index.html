@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BullShit Detector</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin: 2em 1em; background: #111; color: #eee; }
+    button { border: 0; padding: 0; background: none; cursor: pointer; }
+    button img { max-width: 80vw; width: 320px; }
+    button:disabled { opacity: .5; cursor: wait; }
+    #count { font-size: 1.5em; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>BullShit Detector</h1>
+  <button id="bs" type="button" aria-label="Call BullShit">
+    <img src="bsButton.jpg" alt="BullShit button">
+  </button>
+  <p id="count">BullShit called <span id="hits">?</span> times</p>
+
+  <script>
+    // Served by the Yun itself, so the REST API is on the same host.
+    const hits = document.getElementById('hits');
+    const button = document.getElementById('bs');
+
+    function show(response) {
+      return response.json().then((data) => { hits.textContent = data.bshits; });
+    }
+
+    button.addEventListener('click', () => {
+      button.disabled = true;
+      fetch('/arduino/bs/1')
+        .then(show)
+        .catch(() => { hits.textContent = '?'; })
+        .finally(() => { setTimeout(() => { button.disabled = false; }, 8000); });
+    });
+
+    fetch('/arduino/health').then(show).catch(() => {});
+  </script>
+</body>
+</html>
