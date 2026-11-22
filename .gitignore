@@ -2,13 +2,14 @@
 # Sub-projects may add their own .gitignore for stack-specific rules.
 #
 # Note: there is deliberately NO `lib/` rule here. MicroPython projects
-# (tracker/, experimenting/) keep board libraries in lib/ and they must be
+# (tracker/) keep board libraries in lib/ and they must be
 # committed.
 
 # --- OS / editors ---
 .DS_Store
 Thumbs.db
 .idea/
+.vscode/
 *.swp
 *~
 

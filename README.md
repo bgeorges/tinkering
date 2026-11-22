@@ -8,15 +8,14 @@ They share nothing except this repository.
 | Project | Hardware | Stack | Status |
 |---|---|---|---|
 | [`relay-controller/`](relay-controller/) | Raspberry Pi 2 + 4-channel relay board | Node.js / Express, `rpio` | REST API to switch relays on/off (2018) |
-| [`tracker/`](tracker/) | Pycom FiPy/SiPy + PyTrack shield | MicroPython | GPS tracker that logs to SD card and reports over SigFox (2018, prototype) |
-| [`experimenting/`](experimenting/) | Pycom FiPy + SSD1306 OLED | MicroPython | Test ground for board experiments, e.g. OLED and GPS (2018) |
+| [`tracker/`](tracker/) | Pycom FiPy/SiPy + PyTrack shield | MicroPython | GPS tracker that logs to SD card and reports over SigFox, plus a `sandbox/` of board experiments (2018, prototype) |
 | [`bsd/`](bsd/) | Arduino Yun + NeoPixel matrix + buzzer | Arduino (C++) | "BullShit detector": web button that triggers lights and an alarm (2016) |
 
 ## Layout conventions
 
 - One folder per project, each with its own `README`.
 - Stack-specific ignore rules live in the project's own `.gitignore`; the root `.gitignore` only holds shared rules.
-- MicroPython board libraries live in `<project>/lib/` and are committed.
+- MicroPython board libraries live in `lib/` next to the code that runs on the board, and are committed.
 
 ## License
 

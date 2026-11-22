@@ -1,27 +1,26 @@
 ## Tracker code
-## Once there is a GPS Fix it logs GSP coordinates and 
+## Once there is a GPS Fix it logs GPS coordinates and
 ## date-time information on the Pytrack's SD card.
-## It sends GPS coordinate to SigFox network where
-## event callbacks will push this to Openshift Online Pro account
-## for further processing. 
-## TODO: 
-## Since the board (Pycom's FiPy) supports also Lora and
-## LTE CAT M1 and NB-IOT, I am planning to add code to support
-## auto switching in case SigFox isn't available
-## Look at adding support for 
-##  - BLE / SmartPhone connectivity
-##  - Adafruit cloud, Mosquitto
-##  - etc..
+## At boot it sends the board's SigFox ID to the SigFox network, where
+## event callbacks can push data to a cloud backend for further processing.
+## TODO:
+## - Send GPS coordinates over SigFox (max 12 bytes, ~140 messages/day)
+## - Since the board (Pycom's FiPy) supports also Lora and
+##   LTE CAT M1 and NB-IOT, add auto switching in case SigFox isn't available
+## - BLE / SmartPhone connectivity
+## - Adafruit cloud, Mosquitto
+##
+## LED colours: red = booting, green = SigFox ID sent, blue = GPS fix
 
 import socket, pycom, machine, sys, network, os, uos
-import math, time, utime, struct, binascii, gc
+import time, binascii, gc
 from network import Sigfox
-from network import WLAN
-from machine import RTC
 from machine import SD
-from machine import Timer
 from L76GNSS import L76GNSS
 from pytrack import Pytrack
+
+LOG_INTERVAL_S = 30   # seconds between two logged positions
+FLUSH_EVERY = 10      # flush the log file every N positions
 
 pycom.heartbeat(False)
 
@@ -29,15 +28,20 @@ pycom.heartbeat(False)
 wifi = network.WLAN()
 wifi.deinit()
 
-# Logging data onto the SD Card
-# TODO: add some error checking here for when no SD Card is present or full or file permission error, etc..
-sd = SD()
-os.mount(sd, '/sd')
-f = open('/sd/tracker.log', 'w')
+# Log onto the SD card; fall back to internal flash when there is no card.
+# Append so a reboot doesn't wipe the previous session.
+try:
+    sd = SD()
+    os.mount(sd, '/sd')
+    log_path = '/sd/tracker.log'
+except OSError as e:
+    print('No usable SD card ({}), logging to flash instead'.format(e))
+    log_path = '/flash/tracker.log'
+f = open(log_path, 'a')
 
 print("Running Python %s on %s" %(sys.version,  uos.uname() [4]))
 f.write("## -->>> Starting new tracking log session on %s board with PyTrack shield.\n" %(uos.uname() [4]))
-pycom.rgbled(0x7f0000) #yellow
+pycom.rgbled(0x7f0000) # red
 time.sleep(2)
 gc.enable()
 
@@ -46,13 +50,13 @@ gc.enable()
 sigfox = Sigfox(mode=Sigfox.SIGFOX, rcz=Sigfox.RCZ4)
 #create a Sigfox socket to send the GPS coordinate
 s = socket.socket(socket.AF_SIGFOX, socket.SOCK_RAW)
-# make the socket blocking 
-s.setblocking(True) 
-# configure it as uplink only 
+# make the socket blocking
+s.setblocking(True)
+# configure it as uplink only
 s.setsockopt(socket.SOL_SIGFOX, socket.SO_RX, False)
 
-# when the board starts we send the SigFox ID
-s.send("{}".format(binascii.hexlify(sigfox.id())))
+# when the board starts we send the SigFox ID (8 hex characters)
+s.send(binascii.hexlify(sigfox.id()))
 
 # Sending message to SigFox network was successful
 pycom.rgbled(0x007f00) # green
@@ -62,7 +66,7 @@ py = Pytrack()
 l76 = L76GNSS(py, timeout=600)
 #start rtc
 rtc = machine.RTC()
-print('Aquiring GPS signal....')
+print('Acquiring GPS signal....')
 
 #try to get gps date to config rtc
 while (True):
@@ -83,13 +87,16 @@ while (True):
 pycom.rgbled(0x00007f) # blue
 
 print('RTC Set from GPS to UTC:', rtc.now())
-f.write("## -->>> Starting tracking at: ", rtc.now() ) 
+f.write("## -->>> Starting tracking at: {}\n".format(rtc.now()))
+f.flush()
 
-gps_data = l76.get_datetime()
-#s.send(gps_data[0])
-
+logged = 0
 while (True):
-    print("RTC time : {}".format(rtc.now()))
     coord = l76.coordinates()
-    print("$GPGLL>> {}".format(coord))
-    f.write("{} - {}\n".format(coord, rtc.now()))
+    if coord[0] is not None:
+        print("$GPGLL>> {} at {}".format(coord, rtc.now()))
+        f.write("{} - {}\n".format(coord, rtc.now()))
+        logged += 1
+        if logged % FLUSH_EVERY == 0:
+            f.flush()
+    time.sleep(LOG_INTERVAL_S)

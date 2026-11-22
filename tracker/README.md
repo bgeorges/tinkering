@@ -3,6 +3,19 @@
 Build a device that tracks location and possibly other metrics and push them to the cloud. While a number of similar solutions already exist on the market, the focus of this one is to leverage Pycom's SiPy boards. 
 Not only Pycom's SiPy boards are triple network capable (WiFi, SigFox and BLE) but they are also low power MicroPython enabled micro controllers.
 
+
+## Layout
+| Path | What |
+|---|---|
+| `device/` | Code uploaded to the board: `boot.py`, `main.py` (the tracker) and `lib/` (Pytrack + GPS drivers). `pymakr.conf` syncs only this folder. |
+| `sandbox/` | One-off hardware experiments (OLED, SigFox ID, LED). Open it as its own Pymakr project. |
+
+## What it does
+1. Switches WiFi off to save power and opens `tracker.log` on the SD card (or `/flash` if there is no card), appending to it.
+2. Sends the board's SigFox ID once at boot. LED: red → green.
+3. Waits for a GPS fix and sets the RTC to UTC from it. LED: blue.
+4. Logs the position every 30 s (`LOG_INTERVAL_S` in `main.py`).
+
 ## What's in the box
 SiPy (or FiPy if there is support for LTE-CAT M1 / NB-IOT)
 GPS
@@ -56,16 +69,8 @@ print(binascii.hexlify(sigfox.id()))
 # print Sigfox PAC number
 print(binascii.hexlify(sigfox.pac()))
 ```
-you should get results like these:
-```shell
->>> print(binascii.hexlify(sigfox.id()))
-b'00000000'
->>> print(binascii.hexlify(sigfox.pac()))
-b'0000000000000000'
-```
-
-SigFox : 000000
-SigFox PAC: 0000000000000000
+It prints the 8-character device ID and the 16-character PAC.
+Keep the PAC private: it is the one-time code that registers the board to an account.
 
 Now you can activate your SigFox enabled board with your board ID and PAC
 Activation: https://backend.sigfox.com/activate
@@ -98,6 +103,6 @@ note: For a 12-byte data payload, a Sigfox frame will use 26 bytes in total. The
 
 ### GPS
 Get the Pytrack libraries from https://docs.pycom.io/chapter/pytrackpysense/installation/libraries.html
-I replaced L76GNSS.py Library from Pycom by an updated version from 
-This allow me to get most data I need from parsing the various GPS sentences
+`device/lib/L76GNSS.py` is a modified version of Pycom's library that also parses
+GNGGA/GNRMC sentences, so `get_datetime()` returns the UTC date and time used to set the RTC.
 
