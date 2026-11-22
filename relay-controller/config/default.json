@@ -1,7 +1,7 @@
 {
     "RelayController": {
         "serverConfig": {
-            "host": "localhost",
+            "host": "0.0.0.0",
             "port": 8080,
             "startOnBoot": true
         },
@@ -11,8 +11,13 @@
             "SoC": "BCM2837"
         },
         "relays": {
-            "pins": "29,33,35,37",
-            "bootState": "0,1,0,1"
+            "activeLow": true,
+            "list": [
+                { "id": 1, "name": "Fridge",        "pin": 29, "bootState": "ON" },
+                { "id": 2, "name": "master_Heater", "pin": 33, "bootState": "OFF" },
+                { "id": 3, "name": "room1_Heater",  "pin": 35, "bootState": "ON" },
+                { "id": 4, "name": "room2_Heater",  "pin": 37, "bootState": "OFF" }
+            ]
         }
     }
 }

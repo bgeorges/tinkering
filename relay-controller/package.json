@@ -1,18 +1,20 @@
 {
   "name": "relay-controller",
-  "version": "1.0.0",
-  "description": "API to Control Relay though Raspberry Pi's GPIO ",
-  "main": "index.js",
+  "version": "2.0.0",
+  "description": "API to control relays through a Raspberry Pi's GPIO",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node app.js",
+    "mock": "RELAY_MOCK=1 node app.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "author": "Brunewski",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "body-parser": "^1.18.3",
-    "config": "^2.0.1",
-    "express": "^4.16.3",
-    "fs": "0.0.1-security",
-    "rpio": "^0.9.22"
+    "config": "^3.3.12",
+    "express": "^4.21.2",
+    "rpio": "^2.4.2"
   }
 }

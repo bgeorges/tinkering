@@ -1,34 +1,43 @@
-var express = require("express");
-var bodyParser = require("body-parser");
-var app = express();
-var rpio = require('rpio');
-var config = require('config');
+const express = require('express');
+const config = require('config');
+const gpio = require('./gpio');
 
+const serverConfig = config.get('RelayController.serverConfig');
+const relayConfig = config.get('RelayController.relays');
 
-var port = config.get('RelayController.serverConfig.port');
-var pins = config.get('RelayController.relays.pins').split(",") ;
-var states = config.get('RelayController.relays.bootState').split(",");
-
-console.log("Server starting Port %d", port)
-
-for( i=0; i< pins.length; i++){
-	console.log("Relay %d assigned to pin %d as bootState: %d", i, pins[i],states[i]);
+const apiKey = process.env.RELAY_API_KEY;
+if (!apiKey) {
+    console.error('RELAY_API_KEY is not set. Refusing to start an unauthenticated relay API.');
+    process.exit(1);
 }
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-var routes = require("./routes/routes.js")(app);
-
-var server = app.listen(port, function () {
-    console.log("Listening on port %s...", server.address().port);
+const relays = relayConfig.list.map((relay) => {
+    const bootState = gpio.parseState(relay.bootState);
+    if (!bootState) {
+        console.error('Relay %s: bootState must be ON or OFF, got %j', relay.id, relay.bootState);
+        process.exit(1);
+    }
+    return { id: relay.id, name: relay.name, pin: relay.pin, bootState };
 });
 
-console.log("Setting relays to state as defined in config file. ");
-
-for (i=0; i < pins.length; i++ ) {
-	console.log( "Switching relay: %d to %d", pins[i], states[i] );
-	rpio.open(pins[i], rpio.OUTPUT);
-	rpio.write(pins[i], parseInt(states[i]) ); 
+if (gpio.MOCK) {
+    console.log('RELAY_MOCK=1: GPIO is simulated, no pins will be driven.');
 }
 
+console.log('Setting relays to their boot state (active %s).', relayConfig.activeLow ? 'low' : 'high');
+gpio.setup(relays, relayConfig.activeLow);
+relays.forEach((relay) => {
+    console.log('Relay %d (%s) on pin %d: %s', relay.id, relay.name, relay.pin, relay.bootState);
+});
+
+const app = express();
+require('./routes/routes.js')(app, {
+    relays,
+    apiKey,
+    publicConfig: config.util.toObject(config.get('RelayController'))
+});
+
+const server = app.listen(serverConfig.port, serverConfig.host, () => {
+    const address = server.address();
+    console.log('Listening on %s:%d', address.address, address.port);
+});
