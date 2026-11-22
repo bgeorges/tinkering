@@ -3,12 +3,9 @@
 ## date-time information on the Pytrack's SD card.
 ## At boot it sends the board's SigFox ID to the SigFox network, where
 ## event callbacks can push data to a cloud backend for further processing.
-## TODO (tracked at https://github.com/bgeorges/tinkering/issues):
-## - #2 Send GPS coordinates over SigFox (max 12 bytes, ~140 messages/day)
-## - #3 Since the board (Pycom's FiPy) supports also Lora and
-##   LTE CAT M1 and NB-IOT, add auto switching in case SigFox isn't available
-## - #4 BLE / SmartPhone connectivity
-## - #5 Adafruit cloud, Mosquitto
+## UNSUPPORTED (v1): the FiPy is end-of-life and SigFox is being dropped.
+## The remaining TODOs (sending positions, BLE, MQTT / Adafruit IO) continue
+## in v2 on LoRaWAN / TTN: https://github.com/bgeorges/lorawan-tracker
 ##
 ## LED colours: red = booting, green = SigFox ID sent, blue = GPS fix
 

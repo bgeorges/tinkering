@@ -1,4 +1,14 @@
-# Tracker
+# Tracker (v1, unsupported)
+
+> [!WARNING]
+> **This tracker is unsupported and kept as reference only.**
+> - The Pycom FiPy is end-of-life: Pycom Ltd has been in administration since September 2022, so there are no more firmware updates.
+> - SigFox (now run by UnaBiz) is unreliable as a foundation: its French entities entered court protection in 2025.
+> - The code was cleaned up in 2026 but has not run on hardware since.
+>
+> The final snapshot is release [`tracker-v1.0.0`](https://github.com/bgeorges/tinkering/releases/tag/tracker-v1.0.0).
+> Development continues as **v2 on LoRaWAN / The Things Network** in [bgeorges/lorawan-tracker](https://github.com/bgeorges/lorawan-tracker).
+
 ## Purpose
 Build a device that tracks location and possibly other metrics and push them to the cloud. While a number of similar solutions already exist on the market, the focus of this one is to leverage Pycom's SiPy boards. 
 Not only Pycom's SiPy boards are triple network capable (WiFi, SigFox and BLE) but they are also low power MicroPython enabled micro controllers.
